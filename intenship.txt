@@ -1,0 +1,319 @@
+
+1.TASK
+API adress:
+https://qa2.sunbasedata.com/sunbase/portal/api/assignment.jsp?cmd=client_data
+
+Call provided API and get a JSON.
+Given provided JSON data, display a list of clients.
+- The list should contain label and points.
+- There should be filtering dropdown that allows to display All clients, Managers only,
+Non managers.
+- When clicking on client in list, the popup window should display a name, points and
+address.
+- All transitions should have simple animation. Use DOTween for that.
+- The UI should fit any screen aspect.
+      
+    
+public class ClientListActivity extends AppCompatActivity {
+    private List<Client> clientList;
+    private RecyclerView recyclerView;
+    private ClientAdapter adapter;
+    private Spinner filterSpinner;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_client_list);
+
+        // Initialize UI components
+        recyclerView = findViewById(R.id.recyclerView);
+        filterSpinner = findViewById(R.id.filterSpinner);
+
+        // Set up the filter dropdown
+        ArrayAdapter<String> filterAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getFilterOptions());
+        filterSpinner.setAdapter(filterAdapter);
+        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                // Apply filtering logic based on the selected option
+                String selectedFilter = filterSpinner.getSelectedItem().toString();
+                filterClients(selectedFilter);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // Do nothing
+            }
+        });
+
+        // Initialize the client list, make API request, and populate the list
+        clientList = new ArrayList<>();
+        adapter = new ClientAdapter(clientList, new ClientClickListener() {
+            @Override
+            public void onClientClick(Client client) {
+                // Show a popup dialog with client details
+                showClientDetailsDialog(client);
+            }
+        });
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
+
+        // Make an API request to get JSON data and populate the clientList
+        makeApiRequest();
+    }
+
+    private void filterClients(String filter) {
+        // Implement filtering logic here and update the clientList accordingly
+    }
+
+    private void makeApiRequest() {
+        // Make the API request, parse JSON, and populate clientList
+    }
+
+    private void showClientDetailsDialog(Client client) {
+        // Create and show a dialog with client details (name, points, address)
+    }
+
+    // Define a method to get filter options (e.g., All clients, Managers only, Non-managers)
+    private List<String> getFilterOptions() {
+        List<String> filterOptions = new ArrayList<>();
+        // Add filter options here
+        return filterOptions;
+    }
+}
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Filtering Dropdown -->
+    <Spinner
+        android:id="@+id/filterSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp" />
+
+    <!-- RecyclerView for Client List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/filterSpinner"
+        android:layout_margin="8dp" />
+
+</RelativeLayout>
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <!-- Define the layout for a client item, e.g., name, points, and address -->
+
+    <TextView
+        android:id="@+id/clientName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/clientPoints"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp" />
+
+</LinearLayout>
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <!-- Define the layout for the client details popup, e.g., name, points, and address -->
+
+    <TextView
+        android:id="@+id/popupClientName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/popupClientPoints"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:layout_below="@id/popupClientName" />
+
+    <TextView
+        android:id="@+id/popupClientAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:layout_below="@id/popupClientPoints" />
+
+</RelativeLayout>
+public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.ClientViewHolder> {
+    private List<Client> clientList;
+    private ClientClickListener clickListener;
+
+    public ClientAdapter(List<Client> clientList, ClientClickListener clickListener) {
+        this.clientList = clientList;
+        this.clickListener = clickListener;
+    }
+
+    @NonNull
+    @Override
+    public ClientViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_client, parent, false);
+        return new ClientViewHolder(itemView);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ClientViewHolder holder, int position) {
+        Client client = clientList.get(position);
+
+        // Bind client data to the ViewHolder
+        holder.clientNameTextView.setText(client.getName());
+        holder.clientPointsTextView.setText("Points: " + client.getPoints());
+
+        // Set a click listener for the item
+        holder.itemView.setOnClickListener(view -> clickListener.onClientClick(client));
+    }
+
+    @Override
+    public int getItemCount() {
+        return clientList.size();
+    }
+
+    public class ClientViewHolder extends RecyclerView.ViewHolder {
+        TextView clientNameTextView;
+        TextView clientPointsTextView;
+
+        public ClientViewHolder(View itemView) {
+            super(itemView);
+            clientNameTextView = itemView.findViewById(R.id.clientName);
+            clientPointsTextView = itemView.findViewById(R.id.clientPoints);
+        }
+    }
+}
+2.TASK 2
+Spawn random 5-10 Circles on screen. The user draws the Line using a cursor or finger.
+When finger or mouse is up, all Circles that the Line crosses should disappear. Add
+“Restart” button.
+Project requirements:
+- Required Unity version 2022.3.3f1
+- Use any built-in Unity package and no other external assets except DOTween.
+  
+using System.Collections.Generic;
+using UnityEngine;
+using DG.Tweening;
+
+public class GameController : MonoBehaviour
+{
+    public GameObject circlePrefab;
+    public Transform lineRendererContainer;
+    public LineRenderer lineRenderer;
+
+    private List<GameObject> circles = new List<GameObject>();
+    private Vector2 touchStartPos;
+    private Vector2 touchEndPos;
+    private bool isDrawing = false;
+
+    void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            isDrawing = true;
+            touchStartPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            lineRenderer.positionCount = 1;
+            lineRenderer.SetPosition(0, touchStartPos);
+        }
+
+        if (isDrawing && Input.GetMouseButton(0))
+        {
+            Vector3 currentPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            lineRenderer.positionCount++;
+            lineRenderer.SetPosition(lineRenderer.positionCount - 1, currentPos);
+        }
+
+        if (isDrawing && Input.GetMouseButtonUp(0))
+        {
+            isDrawing = false;
+            touchEndPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            RemoveCirclesInPath();
+            lineRenderer.positionCount = 0;
+        }
+    }
+
+    void RemoveCirclesInPath()
+    {
+        for (int i = circles.Count - 1; i >= 0; i--)
+        {
+            if (IsCircleInPath(circles[i].transform.position))
+            {
+                Destroy(circles[i]);
+                circles.RemoveAt(i);
+            }
+        }
+    }
+
+    bool IsCircleInPath(Vector3 circlePos)
+    {
+        for (int i = 0; i < lineRenderer.positionCount - 1; i++)
+        {
+            Vector3 p1 = lineRenderer.GetPosition(i);
+            Vector3 p2 = lineRenderer.GetPosition(i + 1);
+            if (IsIntersecting(circlePos, p1, p2))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool IsIntersecting(Vector3 circlePos, Vector3 lineStart, Vector3 lineEnd)
+    {
+        float distance = Vector3.Distance(lineStart, lineEnd);
+        float t = Vector3.Dot(circlePos - lineStart, lineEnd - lineStart) / (distance * distance);
+        t = Mathf.Clamp01(t);
+        Vector3 closestPoint = lineStart + t * (lineEnd - lineStart);
+        float closestDistance = Vector3.Distance(circlePos, closestPoint);
+        return closestDistance <= 0.5f; // Assuming a circle radius of 0.5
+    }
+
+    public void SpawnRandomCircles(int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            Vector2 randomPos = new Vector2(Random.Range(-5f, 5f), Random.Range(-3f, 3f));
+            GameObject circle = Instantiate(circlePrefab, randomPos, Quaternion.identity);
+            circles.Add(circle);
+        }
+    }
+}
+using UnityEngine;
+using UnityEngine.UI;
+
+public class RestartButton : MonoBehaviour
+{
+    public GameController gameController;
+
+    private Button restartButton;
+
+    void Start()
+    {
+        restartButton = GetComponent<Button>();
+        restartButton.onClick.AddListener(RestartGame);
+    }
+
+    void RestartGame()
+    {
+        gameController.SpawnRandomCircles(Random.Range(5, 10));
+    }
+}
+
+
+
